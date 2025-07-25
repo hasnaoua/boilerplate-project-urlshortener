@@ -25,7 +25,7 @@ app.get('/api/hello', function (req, res) {
 });
 
 app.post('/api/shorturl', (req, res) => {
-  const originalUrl = req.body.original_url;
+  const originalUrl = req.body.url;
 
   if (!originalUrl) {
     return res.status(400).json({ error: 'Invalid URL' });
