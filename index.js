@@ -25,11 +25,20 @@ app.get('/api/hello', function (req, res) {
 });
 
 app.post('/api/shorturl', (req, res) => {
+  const originalUrl = req.body.original_url;
+
+  if (!originalUrl) {
+    return res.status(400).json({ error: 'Invalid URL' });
+  }
+
+  // This is just a placeholder for how you might generate a short URL
+  const shortUrl = Math.floor(Math.random() * 10000).toString();
+
   res.json({
-    'url': req.body.url,
-    'short_url': req.body.short_url
+    original_url: originalUrl,
+    short_url: shortUrl
   });
-})
+});
 
 // Start server
 app.listen(port, function () {
