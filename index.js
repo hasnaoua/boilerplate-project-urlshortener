@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const dns = require('dns');
 const app = express();
 
 // Basic Configuration
@@ -31,12 +32,27 @@ app.post('/api/shorturl', (req, res) => {
     return res.status(400).json({ error: 'Invalid URL' });
   }
 
-  // This is just a placeholder for how you might generate a short URL
-  const shortUrl = Math.floor(Math.random() * 10000).toString();
+  let hostname;
 
-  res.json({
-    original_url: originalUrl,
-    short_url: shortUrl
+  try {
+    const parsedUrl = new URL(originalUrl);
+    hostname = parsedUrl.hostname;
+  } catch (e) {
+    return res.status(400).json({ error: 'Invalid URL' });
+  }
+
+  dns.lookup(hostname, (err, address) => {
+    if (err) {
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+
+    // Generate short URL (placeholder logic)
+    const shortUrl = Math.floor(Math.random() * 10000).toString();
+
+    res.json({
+      original_url: originalUrl,
+      short_url: shortUrl
+    });
   });
 });
 
