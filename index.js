@@ -4,12 +4,12 @@ const cors = require('cors');
 const dns = require('dns');
 const app = express();
 
-// Basic Configuration
+const urlDatabase = {}; // In-memory storage
+let counter = 1;
+
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-
-// Middleware to parse URL-encoded form data
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
@@ -25,35 +25,50 @@ app.get('/api/hello', function (req, res) {
   res.json({ greeting: 'hello API' });
 });
 
+// POST /api/shorturl - Shorten a URL
 app.post('/api/shorturl', (req, res) => {
   const originalUrl = req.body.url;
 
   if (!originalUrl) {
-    return res.status(400).json({ error: 'Invalid URL' });
+    return res.json({ error: 'invalid url' });
   }
 
   let hostname;
-
   try {
     const parsedUrl = new URL(originalUrl);
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error('Invalid protocol');
+    }
     hostname = parsedUrl.hostname;
   } catch (e) {
-    return res.status(400).json({ error: 'Invalid URL' });
+    return res.json({ error: 'invalid url' });
   }
 
-  dns.lookup(hostname, (err, address) => {
+  dns.lookup(hostname, (err) => {
     if (err) {
-      return res.status(400).json({ error: 'Invalid URL' });
+      return res.json({ error: 'invalid url' });
     }
 
-    // Generate short URL (placeholder logic)
-    const shortUrl = Math.floor(Math.random() * 10000).toString();
+    const shortUrl = counter++;
+    urlDatabase[shortUrl] = originalUrl;
 
     res.json({
       original_url: originalUrl,
       short_url: shortUrl
     });
   });
+});
+
+// GET /api/shorturl/:short_url - Redirect to original URL
+app.get('/api/shorturl/:short_url', (req, res) => {
+  const shortUrl = req.params.short_url;
+  const originalUrl = urlDatabase[shortUrl];
+
+  if (originalUrl) {
+    res.redirect(originalUrl);
+  } else {
+    res.status(404).json({ error: 'No short URL found for the given input' });
+  }
 });
 
 // Start server
